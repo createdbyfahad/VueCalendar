@@ -1,0 +1,169 @@
+﻿<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!-- VueCalendar, created in April 2018 by Fahad Alarefi -->
+<html>
+	<head>
+		<title>Vue Calendar</title>
+		<meta charset="UTF-8">
+		<!-- imports details are provided in API documentation -->
+		<!-- 'viewport' is used by bootstrap to respond to device size -->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="shortcut icon" href="#">
+
+		<!-- Javascript:  JQuery from a content distribution network (CDN) -->
+		<!-- Jquery -->
+		<script src="http://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+		<!-- Vue JS and momentJS (CDN) -->
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.0/moment.min.js"></script>
+
+		<!-- local css and js files -->
+		<link rel="stylesheet" href="/static/css/style.css" />
+		<link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.min.css" />
+		<link rel="stylesheet" href="/static/css/jquery.timepicker.min.css" />
+		<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
+		<script src="/static/js/jquery.timepicker.min.js"></script>
+		<script src="/static/js/jquery.popupoverlay.js"></script>
+	</head>
+<body>
+	<!-- The main div that will be rendered using Vue JS -->
+	<div id="app">
+		<!-- This part is for the popup (showing an evnet details) -->
+	<div id="event_view" class="well well-lg">
+	<template v-if="view_event">
+		<!-- Print event information from the App -->
+		<b>Title:</b> {{view_event.title}}<br />
+		<b>At:</b> {{view_event.location}}<br />
+		<b>From:</b> {{view_event.start_date.format("dddd, MMMM Do YYYY, h:mm a")}}
+		<b>To:</b> {{view_event.end_date.format("h:mm a")}}<br />
+		<b>Details:</b> {{view_event.description}}<br />
+
+		<!-- Buttons used to control the event/popup -->
+		<button class="event_view_close btn btn-default">Return to Calendar</button>
+		<button v-on:click="show_update_event" class="event_view_close event_view_edit btn btn-primary">Update Event</button>
+		<button v-on:click="delete_event(view_event.token)" class="event_view_close event_view_delete btn btn-danger">Delete Event</button>
+	</template>
+	</div>
+	<div class="container-fluid">
+
+		<div class="header row">
+			<!-- Top bar error message, used when there's something wrong with the system -->
+			<div :class="alert.type" role="alert">
+			  {{alert.message}}
+			</div>
+			<!-- the top left bar with today is message -->
+			<div class="col-md-3 top-bar"><b>Today is:</b><h4 id="datetime"></h4></div>
+			<div class="col-md-6">
+				<!-- header part -->
+				<h2>Vue Calender</h2>
+				<h4>Week of {{ day.format("MMMM Do") }}</h4>
+			</div>
+			<div class="col-md-3 top-bar">
+				<!-- Top right buttons (backup and delete all events) -->
+				<button class="get_events_backup btn btn-primary" onclick="window.open('/_backup','_blank')">Backup Events</button>
+				<button v-on:click="delete_all_events" class="delete_all_events btn btn-danger">Delete All Event</button>
+			</div>
+		</div>
+
+	<div class="row content">
+		<div class="col-md-3 col-sm-3 left-bar">
+			<div class="form-group">
+		        <div class="row">
+		            <div class="col-md-12">
+		            	<!-- this div renders the select date widget -->
+		                <div id="date-view"></div>
+		            </div>
+		        </div>
+		    </div>
+		    <!-- renders the process-event compenet for (update and add events) -->
+			<process-event-form id="addEventFormTemp" inline-template v-on:new-event="push_event" v-on:update-event="execute_update_event" v-on:new-alert="show_alert" v-bind:chosen_day="day" v-bind:update_event="update_event_details" v-on:cancel-update="update_event_details = null">
+				<form v-on:submit.prevent="process_event">
+				<h3 v-if="update_event">Update event</h3><h3 v-else>Add new event</h3>
+				<p v-if="errors.length">
+				    <b>Please correct the following error(s):</b>
+				    <p v-for="error in errors" class="alert alert-warning">{{ error }}</p>
+				 </p>
+				 <div class="form-group">
+				    <label for="newEventTitle">What</label>
+				    <input id="newEventTitle" type="text" class="form-control" autocomplete="off" name="title" v-model="title">
+				 </div>
+				 <div class="form-group">
+				    <label for="newEventLocation">Where</label>
+				    <input id="newEventLocation" type="text" class="form-control" autocomplete="off" v-model="location">
+				 </div>
+				 <div class="form-group">
+				    <label for="startTimePicker">When</label>
+				    <input id="startTimePicker" type="text" class="form-control time ui-timepicker-input" autocomplete="off" :disabled="all_day == 1">
+				</div>
+				<div class="form-group">
+				    <label for="endTimePicker">To</label>
+				    <input id="endTimePicker" type="text" class="form-control time ui-timepicker-input" autocomplete="off" :disabled="all_day == 1">
+				 </div>
+				 <div class="checkbox">
+				    <label>
+				    	<input id="newEventAllDay" type="checkbox" class="" v-model="all_day">
+				    	All day?
+				    </label>
+				 </div>
+				 <div class="form-group">
+				    <label for="newEventDetails">Details</label>
+				    <textarea id="newEventDetails" class="form-control" v-model="details"></textarea>
+				 </div>
+				 <template v-if="update_event">
+				 	<!-- when the update event status is active, this button will change to update instead of add event -->
+				 	<button class="btn btn-primary">Update Event</button>
+				 	<button type="button" v-on:click="cancel_update" class="btn btn-danger">Cancel</button>
+				 	
+				 </template>
+				 <button v-else class="btn btn-primary">Add Event</button>
+				</form>
+			</process-event-form>
+
+		</div>
+
+		<div class="col-md-9 col-sm-9 grid-view">
+		<table class="table table-bordered">
+		  <thead>
+		    <tr>
+		    	<!-- a header with each day in week, will access the week's days from days variable -->
+		      <th scope="col"></th>
+		      <th class="table-day-head" v-for="day in days">{{day.format("ddd")}}<br /><span>{{day.format("D")}}</span></th>
+		    </tr>
+		  </thead>
+		  <tbody>
+		  	<template v-for="hr in 24">
+		  	<tr v-for="slot in 4" class="slot-celll">
+		  		<!-- this will print the time in (12:00pm) format -->
+		  		<th>{{print_time()}}</th>
+		  		<td is='slot-cell' v-for="dateObj in 7" v-on:view-event="prepare_event_view" v-bind:date='dateObj' v-bind:event='slots[((dateObj-1)*24*4)+((hr-1)*4)+slot-1]'></td>
+		  	</tr>
+		  	</template>
+		  </tbody>
+		</table>
+	</div>
+	</div>
+</div>
+</div>
+<script src="/static/js/api_handlers.js"></script>
+<script src="/static/js/app.js"></script>
+<script type="text/javascript">
+	// this is used for live time updates (top left section)
+	var datetime = null,
+        date = null;
+	var update = function () {
+	    date = moment(new Date())
+	    datetime.html(date.format('dddd, MMMM Do YYYY, h:mm:ss a'));
+	};
+	$(document).ready(function(){
+	    datetime = $('#datetime')
+	    update();
+	    setInterval(update, 1000);
+	});
+</script>
+</body>
+</html>
