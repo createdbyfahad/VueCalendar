@@ -8,8 +8,8 @@ A python flask server is used to host and control the how the application functi
 ## Screenshots
 <p>
 <img src="https://user-images.githubusercontent.com/37724969/48177071-c9fd7380-e2c7-11e8-9e4d-40c3738ab17c.png" width="275" alt="VueCalendar sc1">
-<img src="https://user-images.githubusercontent.com/37724969/48177070-c9fd7380-e2c7-11e8-8472-62b9d1e47ff0.png" width="275" alt="VueCalendar sc2">
-<img src="https://user-images.githubusercontent.com/37724969/48177072-c9fd7380-e2c7-11e8-9f4d-1584a06699e0.png" width="275" alt="VueCalendar sc3">
+<img src="https://user-images.githubusercontent.com/37724969/48177072-c9fd7380-e2c7-11e8-9f4d-1584a06699e0.png" width="275" alt="VueCalendar sc2">
+<img src="https://user-images.githubusercontent.com/37724969/48177070-c9fd7380-e2c7-11e8-8472-62b9d1e47ff0.png" width="275" alt="VueCalendar sc3">
 </p>
 
 ## Authors:
